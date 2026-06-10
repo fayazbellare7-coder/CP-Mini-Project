@@ -1,0 +1,131 @@
+Constants and Globals
+	•	Define three macros: ROWS 30, COLS 60, MAX_OBJECTS 100
+	•	Declare a global 2D char array: char canvas[ROWS][COLS]
+	•	Declare a global Object objects[MAX_OBJECTS] array and int objectCount = 0
+
+Enum and Struct
+Define a typedef enum named ObjectType with values:
+LINE = 1, RECTANGLE, TRIANGLE, CIRCLE
+Define a typedef struct named Object with these fields only:
+int type;
+int x1, y1;
+int x2, y2;
+int x3, y3;
+int radius;
+
+Canvas Functions
+initializeCanvas()
+	•	Nested for loops over i (rows) and j (cols)
+	•	Set every canvas[i][j] = '_'
+displayCanvas()
+	•	Print a leading \n
+	•	Outer loop over rows i, inner loop over cols j
+	•	Print each char with printf("%c", canvas[i][j])
+	•	Print \n after each row
+putPixel(int x, int y, char ch)
+	•	Bounds check: x>=0 && x<COLS && y>=0 && y<ROWS
+	•	If valid: canvas[y][x] = ch
+	•	Note: x maps to columns, y maps to rows
+
+Drawing Algorithms
+drawLineRaw(int x1, int y1, int x2, int y2, char ch)
+	•	Implement Bresenham's line algorithm
+	•	Compute: dx = abs(x2-x1), dy = abs(y2-y1)
+	•	Compute step directions: sx = (x1 < x2) ? 1 : -1, sy = (y1 < y2) ? 1 : -1
+	•	Initialize: err = dx - dy
+	•	Infinite while(1) loop:
+	◦	Call putPixel(x1, y1, ch)
+	◦	Break if x1==x2 && y1==y2
+	◦	Compute e2 = 2 * err
+	◦	If e2 > -dy: err -= dy, x1 += sx
+	◦	If e2 < dx: err += dx, y1 += sy
+drawRectangleRaw(int x1, int y1, int x2, int y2, char ch)
+	•	Draw exactly 4 lines using drawLineRaw:
+	◦	Top: (x1,y1) to (x2,y1)
+	◦	Right: (x2,y1) to (x2,y2)
+	◦	Bottom: (x2,y2) to (x1,y2)
+	◦	Left: (x1,y2) to (x1,y1)
+drawTriangleRaw(int x1,int y1, int x2,int y2, int x3,int y3, char ch)
+	•	Draw exactly 3 lines using drawLineRaw:
+	◦	(x1,y1) to (x2,y2)
+	◦	(x2,y2) to (x3,y3)
+	◦	(x3,y3) to (x1,y1)
+plotCirclePoints(int xc, int yc, int x, int y, char ch)
+	•	Plot exactly 8 symmetric points using putPixel:
+(xc+x, yc+y),  (xc-x, yc+y)
+(xc+x, yc-y),  (xc-x, yc-y)
+(xc+y, yc+x),  (xc-y, yc+x)
+(xc+y, yc-x),  (xc-y, yc-x)
+drawCircleRaw(int xc, int yc, int r, char ch)
+	•	Implement the midpoint circle algorithm:
+	◦	Initialize: x=0, y=r, d=1-r
+	◦	while(x <= y) loop:
+	▪	Call plotCirclePoints(xc, yc, x, y, ch)
+	▪	If d < 0: d += 2*x + 3
+	▪	Else: d += 2*(x-y) + 5, then y--
+	▪	Always: x++
+
+Object Dispatch
+drawObject(Object obj, char ch)
+	•	switch on obj.type:
+	◦	LINE: call drawLineRaw(obj.x1, obj.y1, obj.x2, obj.y2, ch)
+	◦	RECTANGLE: call drawRectangleRaw(obj.x1, obj.y1, obj.x2, obj.y2, ch)
+	◦	TRIANGLE: call drawTriangleRaw(obj.x1,obj.y1, obj.x2,obj.y2, obj.x3,obj.y3, ch)
+	◦	CIRCLE: call drawCircleRaw(obj.x1, obj.y1, obj.radius, ch)
+
+CRUD Operations
+addObject()
+	•	Declare a local Object obj
+	•	Print the menu: \n1.Line\n2.Rectangle\n3.Triangle\n4.Circle\nChoice:
+	•	
+	•	scanf("%d", &obj.type)
+	•	Switch on obj.type:
+	◦	LINE: print "x1 y1 x2 y2: ", scanf 4 ints into x1,y1,x2,y2
+	◦	RECTANGLE: print "TopLeft(x1 y1) BottomRight(x2 y2): ", scanf 4 ints
+	◦	TRIANGLE: print "x1 y1 x2 y2 x3 y3: ", scanf 6 ints
+	◦	CIRCLE: print "Center(x y) Radius: ", scanf 3 ints into x1,y1,radius
+	◦	default: return
+	•	Store: objects[objectCount] = obj
+	•	Call drawObject(obj, '*')
+	•	Increment objectCount
+deleteObject()
+	•	Declare int id
+	•	Print "Object ID (0-%d): " with objectCount-1
+	•	scanf("%d", &id)
+	•	Bounds check: if id < 0 || id >= objectCount, return
+	•	Call drawObject(objects[id], '_') — erase only, do NOT remove from array
+modifyObject()
+	•	Declare int id
+	•	Print "Object ID (0-%d): " with objectCount-1
+	•	scanf("%d", &id)
+	•	Bounds check: if id < 0 || id >= objectCount, return
+	•	Call drawObject(objects[id], '_') to erase old shape
+	•	Print "Enter new values:\n"
+	•	Copy: Object obj = objects[id]
+	•	Switch on obj.type, scanf new coordinates into obj fields (same format as add)
+	•	Update array: objects[id] = obj
+	•	Call drawObject(obj, '*') to draw updated shape
+
+Main Function
+	•	Declare int choice
+	•	Call initializeCanvas()
+	•	do { ... } while(choice != 6) loop:
+	◦	Print: \n\n==== 2D GRAPHICS EDITOR ====\n1. Add Object\n2. Delete Object\n3. Modify Object\n4. Display Canvas\n5. Clear Canvas\n6. Exit\nChoice:
+	◦	
+	◦	scanf("%d", &choice)
+	◦	Switch:
+	▪	1: addObject()
+	▪	2: deleteObject()
+	▪	3: modifyObject()
+	▪	4: displayCanvas()
+	▪	5: initializeCanvas()
+	•	Return 0
+
+Headers
+Include only: <stdio.h>, <stdlib.h>, <math.h>
+Style Rules
+	•	No dynamic memory allocation
+	•	No fill operations — outlines only
+	•	All input via scanf
+	•	All output via printf
+	•	No helper utilities beyond what is described above
